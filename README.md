@@ -1,14 +1,33 @@
-# pjjet
+<div align="center">
+
+# ⚡ pjjet
 
 **pjjet** is a lightweight CLI and importable Python library that turns enterprise files
 into clean, token-optimized context for LLMs. It favours robustness over cleverness: bad
 input becomes a warning plus best-effort output, never a traceback.
 
+![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Core](https://img.shields.io/badge/core-stdlib--only-2ea44f?style=for-the-badge)
+![License](https://img.shields.io/badge/license-GPL--3.0--only-blue?style=for-the-badge)
+
 ```text
 text / logs  ·  CSV / TSV  ·  JSON / JSONL  ·  DOCX
 ```
 
-## Installation
+[Installation](#-installation) ·
+[Quickstart](#-quickstart) ·
+[CLI](#-cli-reference) ·
+[Library API](#-library-api) ·
+[Converters](#-what-each-converter-guarantees) ·
+[Optimization](#-token-optimization) ·
+[Front matter](#-front-matter) ·
+[Development](#-development)
+
+</div>
+
+---
+
+## 📦 Installation
 
 ```bash
 pip install pjjet            # core package, stdlib-only
@@ -29,9 +48,10 @@ From a checkout, for development:
 pip install -e ".[dev]"       # editable install with tests, linters and type checker
 ```
 
-Python 3.10+ is required. The core package is stdlib-only; heavy parsers live in extras.
+> [!NOTE]
+> Python 3.10+ is required. The core package is stdlib-only; heavy parsers live in extras.
 
-## Quickstart
+## 🚀 Quickstart
 
 ```bash
 pjjet report.docx --format md
@@ -40,10 +60,10 @@ pjjet slides.json --front-matter
 cat sales.csv | pjjet --type csv -
 ```
 
-## CLI reference
+## 🖥️ CLI reference
 
 | Option | Description |
-|--------|-------------|
+|:-------|:------------|
 | `--format` | Output format: `md` (default), `json-compact`, `yaml`, `text` |
 | `--table-style` | `auto` (default), `markdown`, `csv`, `records` (`keyvalue` is an alias) |
 | `--max-tokens N` | Hard token budget; progressive strategies run until the body fits |
@@ -58,9 +78,15 @@ cat sales.csv | pjjet --type csv -
 
 Boolean flags also accept an explicit value: `--front-matter=True`, `--strict=False`.
 
-Exit codes: `0` success (warnings allowed), `1` `--strict` failure, `2` usage or I/O error.
+**Exit codes**
 
-## Library API
+| Code | Meaning |
+|:----:|:--------|
+| `0` | success (warnings allowed) |
+| `1` | `--strict` failure |
+| `2` | usage or I/O error |
+
+## 🐍 Library API
 
 ```python
 import pjjet
@@ -75,17 +101,18 @@ pjjet.convert(data, name="report.csv")
 pjjet.convert(open("a.json", "rb"), format="yaml")
 ```
 
-`pjjet.convert` raises only for caller errors (`TypeError` for an unsupported source,
-`ValueError` for a bad option or unknown type, `OSError` for a missing file), an unusable
-explicit tokenizer, and `ConversionError` in `strict` mode.
+> [!IMPORTANT]
+> `pjjet.convert` raises only for caller errors (`TypeError` for an unsupported source,
+> `ValueError` for a bad option or unknown type, `OSError` for a missing file), an unusable
+> explicit tokenizer, and `ConversionError` in `strict` mode.
 
-## What each converter guarantees
+## ✅ What each converter guarantees
 
-### Text / logs
+### 📝 Text / logs
 Detects BOMs and encodings, strips control characters, collapses whitespace runs and
 breadline runs, and keeps line structure inside a paragraph.
 
-### CSV / TSV
+### 📊 CSV / TSV
 - Parses the **whole file** with a real CSV reader, including quoted newlines.
 - Detects `, ; \t |` from the content (and `.tsv` from the extension).
 - Reports ragged rows and pads them instead of truncating data.
@@ -93,21 +120,21 @@ breadline runs, and keeps line structure inside a paragraph.
   the data. Structural problems are warnings.
 - `--budget summary` emits column type inference, row count and null rate plus a sample.
 
-### JSON / JSONL
+### 🧩 JSON / JSONL
 - Parses the whole document; a single object becomes key/value pairs, an array of objects
   becomes a table with the union of keys, an array of strings becomes a list, and anything
   nested stays a lossless `Data` block for JSON/YAML output.
 - Reports duplicate keys and non-standard `NaN`/`Infinity` constants instead of hiding them.
 - JSONL skips only the invalid lines and says how many.
 
-### DOCX
+### 📄 DOCX
 - Document order is preserved (paragraphs and tables interleaved as authored).
 - Headings, nested tables, inline hyperlinks (`[text](url)`), footnotes and tracked changes.
 - Tracked insertions are accepted; tracked deletions are excluded, with a warning.
 - The ZIP container is checked for zip-bomb sizes/ratios before parsing, and footnotes are
   parsed with `defusedxml` when available.
 
-## Token optimization
+## 🎯 Token optimization
 
 `--table-style auto` picks per table: `records` for sparse data, Markdown for small tables,
 compact CSV for large ones.
@@ -126,7 +153,7 @@ fits, and `stats.dropped` / front matter record what happened:
 Token counting uses `tiktoken` (`o200k_base`) when installed and the backend name is always
 reported, because exact and heuristic counts differ.
 
-## Front matter
+## 🏷️ Front matter
 
 ```yaml
 ---
@@ -139,7 +166,7 @@ warnings:
 ---
 ```
 
-## Development
+## 🛠️ Development
 
 ```bash
 python -m pip install -e ".[dev]"
@@ -148,6 +175,6 @@ python -m ruff check .
 python -m mypy
 ```
 
-## License
+## 📜 License
 
 GNU General Public License v3.0 only (GPL-3.0-only) — see [LICENSE](LICENSE).
