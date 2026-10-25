@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pjjet"
+dynamic = ["version"]
+description = "Convert messy enterprise files into clean, token-optimized context for LLMs."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [{ name = "Ajith", email = "ajlikeadj@users.noreply.github.com" }]
+keywords = ["llm", "markdown", "csv", "json", "docx", "token", "context", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Text Processing",
+    "Typing :: Typed",
+]
+dependencies = []  # core is stdlib-only by design; heavy parsers live in extras
+
+[project.optional-dependencies]
+tokens = ["tiktoken>=0.7"]
+csv = ["charset-normalizer>=3.3"]
+docx = ["python-docx>=1.1", "defusedxml>=0.7"]
+all = ["pjjet[tokens,csv,docx]"]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "hypothesis>=6.100",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "pyyaml>=6",
+    "pjjet[all]",
+]
+
+[project.urls]
+Homepage = "https://github.com/Ajlikeadj/pjjet"
+Repository = "https://github.com/Ajlikeadj/pjjet"
+Issues = "https://github.com/Ajlikeadj/pjjet/issues"
+
+[project.scripts]
+pjjet = "pjjet.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "pjjet.__version__" }
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+filterwarnings = ["error::DeprecationWarning:pjjet.*"]
+
+[tool.coverage.run]
+branch = true
+source = ["pjjet"]
+
+[tool.coverage.report]
+exclude_lines = ["if TYPE_CHECKING:", "pragma: no cover", "raise NotImplementedError"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+# One root package only: listing a package and its subpackages here makes mypy
+# resolve pjjet.converters twice (once via each entry) and abort with
+# "Duplicate module named" before checking anything. The root follows all
+# subpackages through its imports.
+packages = ["pjjet"]
+
+[[tool.mypy.overrides]]
+module = ["tiktoken", "defusedxml.*", "charset_normalizer.*"]
+ignore_missing_imports = true

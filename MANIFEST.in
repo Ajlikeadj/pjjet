@@ -1,0 +1,13 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+include pyproject.toml
+
+recursive-include tests *.py
+recursive-include pjjet py.typed
+
+global-exclude __pycache__ *.py[cod] .DS_Store
+
+# Static metadata files: even though setuptools can sometimes discover them, keep them explicit
+# so they survive builds that run from outside the source tree (e.g. a clean CI checkout).
+include MANIFEST.in
