@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Lint
+        run: python -m ruff check .
+      - name: Type check
+        run: python -m mypy
+      - name: Test
+        run: python -m pytest --cov=pjjet --cov-report=term-missing
+      - name: Validate no stray references to the old package name
+        run: |
+          set -eu
+          # Every reference to the old name must live inside the package tree (pjjet/)
+          # or the test tree (tests/). Anything else is a missed rename, leftover doc,
+          # or a file that should either be renamed/moved or added to the rename list.
+          #
+          # This workflow file is excluded because it contains the pattern itself, so
+          # scanning it would always flag its own source. CHANGELOG.md is excluded
+          # because recording the rename is exactly what a changelog is for.
+          stray="$(git ls-files -z | xargs -0 grep -IlE '\bctxify\b' \
+            --exclude-dir=.git --exclude-dir=dist --exclude-dir=build \
+            --exclude-dir=__pycache__ --exclude-dir=.pytest_cache \
+            --exclude-dir=.ruff_cache --exclude-dir=.mypy_cache \
+            --exclude-dir=.hypothesis --exclude='*.egg-info' \
+            --exclude='*.pyc' --exclude='*.pyo' \
+            --exclude='ci.yml' --exclude='CHANGELOG.md' \
+            | grep -vE '^(pjjet/|tests/)' || true)"
+          if [ -n "$stray" ]; then
+            printf '%s\n' "$stray"
+            echo "::error::Found files outside pjjet/ and tests/ that still reference 'ctxify'."
+            exit 1
+          fi
+          echo "No stray 'ctxify' references found (expected)."
